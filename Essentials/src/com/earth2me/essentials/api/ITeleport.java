@@ -30,9 +30,6 @@ public interface ITeleport {
      */
     void now(Player entity, boolean cooldown, PlayerTeleportEvent.TeleportCause cause) throws Exception;
 
-    @Deprecated
-    void teleport(Location loc, Trade chargeFor) throws Exception;
-
     /**
      * Teleport a player to a specific location
      *

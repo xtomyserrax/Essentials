@@ -1,6 +1,9 @@
 package com.earth2me.essentials.utils;
 
 import com.earth2me.essentials.IEssentials;
+import io.papermc.lib.PaperLib;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import net.ess3.api.IUser;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -9,8 +12,6 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.ItemStack;
-
-import java.util.*;
 
 import static com.earth2me.essentials.I18n.tl;
 
@@ -88,10 +89,33 @@ public class LocationUtil {
         return block.getLocation();
     }
 
-    public static boolean isBlockAboveAir(final World world, final int x, final int y, final int z) {
+    private static boolean _isBlockAboveAir(final World world, final int x, final int y, final int z) {
         return y > world.getMaxHeight() || HOLLOW_MATERIALS.contains(world.getBlockAt(x, y - 1, z).getType());
     }
 
+    /*
+    * Check whether a block is above air or another hollow material.
+    * @deprecated This is blocking; use isBlockAboveAirAsync instead.
+    */
+    @Deprecated
+    public static boolean isBlockAboveAir(final World world, final int x, final int y, final int z) {
+        return _isBlockAboveAir(world, x, y, z);
+    }
+
+    /**
+     * Check whether a block is above air or another hollow material.
+     * If the chunk has not yet been generated, this will return true
+     */
+    public static CompletableFuture<Boolean> isBlockAboveAirAsync(final World world, final int x, final int y, final int z) {
+        return PaperLib.getChunkAtAsync(world, x << 4, z << 4, false).thenApply(chunk -> {
+            if (chunk != null) return _isBlockAboveAir(world, x, y, z);
+
+            return true;
+        });
+    }
+
+    /* This is blocking - use async alternative. */
+    @Deprecated
     public static boolean isBlockUnsafeForUser(final IUser user, final World world, final int x, final int y, final int z) {
         if (user.getBase().isOnline() && world.equals(user.getBase().getWorld()) && (user.getBase().getGameMode() == GameMode.CREATIVE || user.getBase().getGameMode() == GameMode.SPECTATOR || user.isGodModeEnabled()) && user.getBase().getAllowFlight()) {
             return false;
@@ -103,10 +127,14 @@ public class LocationUtil {
         return isBlockAboveAir(world, x, y, z);
     }
 
+    /* This is blocking - use async alternative. */
+    @Deprecated
     public static boolean isBlockUnsafe(final World world, final int x, final int y, final int z) {
         return isBlockDamaging(world, x, y, z) || isBlockAboveAir(world, x, y, z);
     }
 
+    /* This is blocking - use async alternative. */
+    @Deprecated
     public static boolean isBlockDamaging(final World world, final int x, final int y, final int z) {
         final Block below = world.getBlockAt(x, y - 1, z);
 
@@ -144,14 +172,8 @@ public class LocationUtil {
         return new Location(world, x + 0.5, y, z + 0.5, loc.getYaw(), loc.getPitch());
     }
 
-    /**
-     * @deprecated Use {@link #getSafeDestination(IEssentials, IUser, Location)}
-     */
+    /* This is blocking - use async alternative. */
     @Deprecated
-    public static Location getSafeDestination(final IUser user, final Location loc) throws Exception {
-        return getSafeDestination(null, user, loc);
-    }
-
     public static Location getSafeDestination(final IEssentials ess, final IUser user, final Location loc) throws Exception {
         if (user.getBase().isOnline() && loc.getWorld().equals(user.getBase().getWorld()) && (user.getBase().getGameMode() == GameMode.CREATIVE || user.isGodModeEnabled()) && user.getBase().getAllowFlight()) {
             if (shouldFly(loc)) {
@@ -167,6 +189,8 @@ public class LocationUtil {
         return getSafeDestination(loc);
     }
 
+    /* This is blocking - use async alternative. */
+    @Deprecated
     public static Location getSafeDestination(final Location loc) throws Exception {
         if (loc == null || loc.getWorld() == null) {
             throw new Exception(tl("destinationNotSet"));
@@ -222,6 +246,8 @@ public class LocationUtil {
         return new Location(world, x + 0.5, y, z + 0.5, loc.getYaw(), loc.getPitch());
     }
 
+    /* This is blocking - use async alternative. */
+    @Deprecated
     public static boolean shouldFly(Location loc) {
         final World world = loc.getWorld();
         final int x = loc.getBlockX();
